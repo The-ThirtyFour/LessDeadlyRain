@@ -4,7 +4,7 @@ using On;
 
 namespace LessDeadlyRain;
 
-[BepInPlugin("floofcheeks.lessdeadlyrain", "Less Deadly Rain", "1.2.1")]
+[BepInPlugin("floofcheeks.lessdeadlyrain", "Less Deadly Rain", "1.2.2")]
 [BepInDependency("com.dual.catnap", BepInDependency.DependencyFlags.SoftDependency)]
 public class LessDeadlyRain : BaseUnityPlugin
 {
@@ -15,6 +15,7 @@ public class LessDeadlyRain : BaseUnityPlugin
 	private float oldScreenShake;
 
 	private float oldRumbleSound;
+
 
 	public void OnEnable()
 	{

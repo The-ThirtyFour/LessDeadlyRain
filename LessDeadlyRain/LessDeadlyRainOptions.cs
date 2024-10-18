@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace LessDeadlyRain;
 
+
 public class LessDeadlyRainOptions : OptionInterface
 {
 	public readonly Configurable<bool> lessDeadlyRain;
@@ -15,6 +16,14 @@ public class LessDeadlyRainOptions : OptionInterface
 	public readonly Configurable<float> buildupMultiplier;
 
 	public readonly Configurable<int> screenShakeIntensity;
+
+	public OpUpdown OpUpdownGen()
+	{
+		OpUpdown gen = new OpUpdown(buildupMultiplier, new Vector2(145f, 427f), 100f, 1);
+		gen.GetType().GetField("_fMin", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(gen, .1f);
+		gen.GetType().GetField("_fMax", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(gen, 100f);
+        return gen;
+	}
 
 	public LessDeadlyRainOptions()
 	{
@@ -51,10 +60,11 @@ public class LessDeadlyRainOptions : OptionInterface
 			},
 			new OpLabel(55f, 463f, "Apply in Arena modes"),
 			new OpLabel(25f, 433f, "Rain buildup timer:"),
-			new OpUpdownCustom(buildupMultiplier, new Vector2(145f, 427f), 70f, 0.1f, 100f, 1)
+			OpUpdownGen()
+			/*new OpUpdownCustom(buildupMultiplier, new Vector2(145f, 427f), 70f, 0.1f, 100f, 1)
 			{
 				description = "Change the amount of time it takes for rain to become deadly. (For example, 2.0 will make it take twice as long)"
-			},
+			}*/,
 			new OpLabel(25f, 403f, "Screenshake intensity:"),
 			new OpSlider(screenShakeIntensity, new Vector2(25f, 370f), 150)
 			{
@@ -66,7 +76,7 @@ public class LessDeadlyRainOptions : OptionInterface
 	}
 }
 
-public class OpUpdownCustom : OpUpdown
+/*public class OpUpdownCustom : OpUpdown
 {
 	
     public OpUpdownCustom(Configurable<int> config, Vector2 pos, float sizeX) : base(config, pos, sizeX)
@@ -82,4 +92,4 @@ public class OpUpdownCustom : OpUpdown
 		this._fMin = _fMin;
 		this._fMax = _fMax;
     }
-}
+}*/
