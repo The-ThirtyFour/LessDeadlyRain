@@ -20,9 +20,7 @@ public class LessDeadlyRain : BaseUnityPlugin
 
 	private float pulseTimer;
 
-	private bool pulsing;
-
-	private int testPulsing = 0;
+	private int pulsing = -1;
 
 
 	public void OnEnable()
@@ -74,8 +72,7 @@ public class LessDeadlyRain : BaseUnityPlugin
 
 				if (options.pulsingRain.Value)
 				{
-					pulsing = true;
-					testPulsing = 1;
+					pulsing = 2;
 					self.deathRainMode = GlobalRain.DeathRain.DeathRainMode.None;
 					self.GetType().GetField("timeInThisMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(self, Mathf.Lerp(750f, 800f, UnityEngine.Random.value));
 					self.GetType().GetField("progression", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(self, 0f);
@@ -101,7 +98,7 @@ public class LessDeadlyRain : BaseUnityPlugin
 			if (pulseTimer <= 10)
 			{
 				//if (self.deathRainMode == GlobalRain.DeathRain.DeathRainMode.GradeAPlateu)
-				if (testPulsing == 3)
+				if (pulsing == 3)
 				{
 					self.deathRainMode = GlobalRain.DeathRain.DeathRainMode.None;
 
@@ -111,18 +108,18 @@ public class LessDeadlyRain : BaseUnityPlugin
 					globalRain.Intensity = 0f;
 					globalRain.bulletRainDensity = 0.5f;
 
-					testPulsing = 0;
+					pulsing = 0;
 				}
-				else if (testPulsing == 0)
+				else if (pulsing == 0)
 				{
 					self.deathRainMode = GlobalRain.DeathRain.DeathRainMode.None;
 
 					self.GetType().GetField("timeInThisMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(self, 200f);
 					self.GetType().GetField("progression", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(self, 0f);
 
-					testPulsing = 1;
+					pulsing = 1;
 				}
-				else if (testPulsing == 1)
+				else if (pulsing == 1)
 				{
 					self.deathRainMode = GlobalRain.DeathRain.DeathRainMode.None;
 
@@ -131,16 +128,16 @@ public class LessDeadlyRain : BaseUnityPlugin
 
 					globalRain.Intensity = 0.6f;
 
-					testPulsing = 2;
+					pulsing = 2;
 				}
-				else if (testPulsing == 2)
+				else if (pulsing == 2)
 				{
 					self.deathRainMode = GlobalRain.DeathRain.DeathRainMode.None;
 
 					self.GetType().GetField("timeInThisMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(self, 200f);
 					self.GetType().GetField("progression", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(self, 0f);
 
-					testPulsing = 3;
+					pulsing = 3;
 				}
 
 
@@ -148,7 +145,7 @@ public class LessDeadlyRain : BaseUnityPlugin
 			}
 
 			globalRain.bulletTimer = 0;
-			if (testPulsing == 0)
+			if (pulsing == 0)
 			{
 				self.globalRain.bulletRainDensity = Mathf.Lerp(0.5f, 0.8f, (float)self.GetType().GetField("progression", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(self));
 				globalRain.flood -= globalRain.floodSpeed;
@@ -158,20 +155,20 @@ public class LessDeadlyRain : BaseUnityPlugin
 				globalRain.ScreenShake = 0f;
 
 			}
-			if (testPulsing == 1)
+			if (pulsing == 1)
 			{
 				globalRain.Intensity = Mathf.Lerp(0f, 0.6f, (float)self.GetType().GetField("progression", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(self));
 				self.globalRain.bulletRainDensity = Mathf.Lerp(0.8f, 0.6f, (float)self.GetType().GetField("progression", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(self));
 
 			}
-			if (testPulsing == 2)
+			if (pulsing == 2)
 			{
 				if (globalRain.Intensity > 0.6)
 				{
 					globalRain.Intensity = 0.6f;
 				}
 			}
-			if (testPulsing == 3)
+			if (pulsing == 3)
 			{
 				globalRain.Intensity = Mathf.Lerp(0.6f, 0f, (float)self.GetType().GetField("progression", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(self));
 				self.globalRain.bulletRainDensity = Mathf.Lerp(0.3f, 0.5f, (float)self.GetType().GetField("progression", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(self));
@@ -182,8 +179,8 @@ public class LessDeadlyRain : BaseUnityPlugin
 			globalRain.flood -= globalRain.floodSpeed;
 		}
 		float num = (float)options.screenShakeIntensity.Value * 0.01f;
-		globalRain.MicroScreenShake *= num;
-		globalRain.ScreenShake *= num;
+		globalRain.MicroScreenShake *= pulsing == 0 ? num : 0;
+		globalRain.ScreenShake *= pulsing == 0 ? num : 0;
 		
 	}
 
