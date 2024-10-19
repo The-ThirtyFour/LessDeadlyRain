@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel.Design;
 using BepInEx;
+using IL;
 using On;
 using UnityEngine;
 
@@ -20,8 +21,13 @@ public class LessDeadlyRain : BaseUnityPlugin
 
 	private float pulseTimer;
 
+	private float timeInThisMode;
+
 	private int pulsing = -1;
 
+	private bool ndr = false;
+
+	private float maxIntensity = 0.45f;
 
 	public void OnEnable()
 	{
@@ -29,9 +35,11 @@ public class LessDeadlyRain : BaseUnityPlugin
 		On.GlobalRain.DeathRain.DeathRainUpdate += DeathRainUpdateHook;
 		On.GlobalRain.DeathRain.NextDeathRainMode += NextDeathRainModeHook;
 		On.RainCycle.Update += RainCycleUpdateHook;
+        On.GlobalRain.Update += GlobalRain_Update;
+		On.GlobalRain.InitDeathRain += InitDeathRainHook;
 	}
 
-	private void OnModsInitHook(On.RainWorld.orig_OnModsInit orig, RainWorld self)
+    private void OnModsInitHook(On.RainWorld.orig_OnModsInit orig, RainWorld self)
 	{
 		orig(self);
 		try
@@ -49,6 +57,7 @@ public class LessDeadlyRain : BaseUnityPlugin
 	{
 		GlobalRain globalRain = self.globalRain;
 		RainWorldGame game = globalRain.game;
+
 		if (game.IsStorySession || (game.IsArenaSession && options.arenaMode.Value))
 		{
 			globalRain.MicroScreenShake = oldMicroScreenShake;
@@ -56,7 +65,12 @@ public class LessDeadlyRain : BaseUnityPlugin
 			globalRain.RumbleSound = oldRumbleSound;
 		}
 		orig(self);
-		if (!game.IsStorySession && (!game.IsArenaSession || !options.arenaMode.Value))
+        if (options.noDeathRain.Value)
+        {
+            ndr = true;
+            return;
+        }
+        if (!game.IsStorySession && (!game.IsArenaSession || !options.arenaMode.Value))
 		{
 			return;
 		}
@@ -144,48 +158,52 @@ public class LessDeadlyRain : BaseUnityPlugin
 				pulseTimer = 2000f;
 			}
 
-			globalRain.bulletTimer = 0;
+            self.globalRain.bulletTimer = 0;
 			if (pulsing == 0)
 			{
-				self.globalRain.bulletRainDensity = Mathf.Lerp(0.5f, 0.8f, (float)self.GetType().GetField("progression", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(self));
-				globalRain.flood -= globalRain.floodSpeed;
-				globalRain.Intensity = 0f;
-				globalRain.RumbleSound = -1f;
-				globalRain.MicroScreenShake = 0f;
-				globalRain.ScreenShake = 0f;
+				self.globalRain.bulletRainDensity = Mathf.Lerp(0.5f, 0.7f, (float)self.GetType().GetField("progression", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(self));
+				self.globalRain.flood -= globalRain.floodSpeed;
+                self.globalRain.Intensity = 0f;
+                self.globalRain.RumbleSound = -1f;
+                self.globalRain.MicroScreenShake = 0f;
+				self.globalRain.ScreenShake = 0f;
 
 			}
 			if (pulsing == 1)
 			{
-				globalRain.Intensity = Mathf.Lerp(0f, 0.6f, (float)self.GetType().GetField("progression", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(self));
-				self.globalRain.bulletRainDensity = Mathf.Lerp(0.8f, 0.6f, (float)self.GetType().GetField("progression", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(self));
+                self.globalRain.Intensity = Mathf.Lerp(0f, 0.6f, (float)self.GetType().GetField("progression", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(self));
+				self.globalRain.bulletRainDensity = Mathf.Lerp(0.7f, 0.4f, (float)self.GetType().GetField("progression", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(self));
 
 			}
 			if (pulsing == 2)
 			{
-				if (globalRain.Intensity > 0.6)
+				if (self.globalRain.Intensity > 0.6)
 				{
-					globalRain.Intensity = 0.6f;
+                    self.globalRain.Intensity = 0.6f;
 				}
 			}
 			if (pulsing == 3)
 			{
-				globalRain.Intensity = Mathf.Lerp(0.6f, 0f, (float)self.GetType().GetField("progression", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(self));
+                self.globalRain.Intensity = Mathf.Lerp(0.6f, 0f, (float)self.GetType().GetField("progression", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(self));
 				self.globalRain.bulletRainDensity = Mathf.Lerp(0.3f, 0.5f, (float)self.GetType().GetField("progression", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(self));
 			}
 		}
         if (options.noRainFlooding.Value)
 		{
-			globalRain.flood -= globalRain.floodSpeed;
+            self.globalRain.flood -= self.globalRain.floodSpeed;
 		}
 		float num = (float)options.screenShakeIntensity.Value * 0.01f;
-		globalRain.MicroScreenShake *= pulsing == 0 ? num : 0;
-		globalRain.ScreenShake *= pulsing == 0 ? num : 0;
+        self.globalRain.MicroScreenShake *= pulsing == 0 ? num : 0;
+        self.globalRain.ScreenShake *= pulsing == 0 ? num : 0;
 		
 	}
 
 	private void NextDeathRainModeHook(On.GlobalRain.DeathRain.orig_NextDeathRainMode orig, GlobalRain.DeathRain self)
 	{
+		if (ndr)
+		{
+			return;
+		}
 		orig(self);
 		if ((self.globalRain.game.IsStorySession || (self.globalRain.game.IsArenaSession && options.arenaMode.Value)) && options.buildupMultiplier.Value != 1f)
 		{
@@ -206,5 +224,114 @@ public class LessDeadlyRain : BaseUnityPlugin
 		}
 	}
 
-	
+	private void InitDeathRainHook(On.GlobalRain.orig_InitDeathRain orig, GlobalRain self)
+	{
+		if (options.noDeathRain.Value)
+		{
+			ndr = true;
+		}
+		if (ndr)
+		{
+			return;
+		}
+		orig(self);
+	}
+    private void GlobalRain_Update(On.GlobalRain.orig_Update orig, GlobalRain self)
+    {
+		orig(self);
+
+		oldRumbleSound = self.RumbleSound;
+		oldScreenShake = self.ScreenShake;
+		oldMicroScreenShake = self.MicroScreenShake;
+
+		if (!ndr)
+		{
+			return;
+		}
+
+		if (options.noDeathRain.Value)
+		{
+			if (self.deathRain != null)
+			{
+				self.deathRain = null;
+			}
+
+			if (self.flood < 0)
+			{
+				self.flood = 0;
+			}
+
+			if (options.pulsingRain.Value)
+			{
+				if (pulseTimer <= 0)
+				{
+					if (pulsing == -1) //activate
+					{
+						pulsing = 0;
+					}
+                    if (pulsing == 3) //no rain
+					{
+						pulseTimer = 1000;
+                        pulsing = 0;
+						self.RumbleSound = 0f;
+					}
+                    else if (pulsing == 0) //rain transition
+					{
+						pulseTimer = 100;
+                        pulsing = 1;
+					}
+                    else if (pulsing == 1) //rain
+					{
+						pulseTimer = 1000;
+                        pulsing = 2;
+						self.RumbleSound = oldRumbleSound;
+					}
+                    else if (pulsing == 2) //no rain transition
+					{
+						pulseTimer = 100;
+                        pulsing = 3;
+					}
+					timeInThisMode = pulseTimer;
+
+                    foreach (Room room in self.game.world.activeRooms)
+                    {
+                        room.roomRain.rumbleSound.Volume = self.RumbleSound * room.roomSettings.RumbleIntensity;
+						room.roomRain.rumbleSound.Update();
+                    }
+                }
+
+				pulseTimer -= 1;
+
+				//update
+				if (pulsing == 0) // no rain
+				{
+					self.Intensity = 0f;
+					self.bulletRainDensity = Mathf.Lerp(0.35f, 0.2f, pulseTimer / timeInThisMode);
+					self.flood -= self.floodSpeed;
+					self.ScreenShake = 0f;
+					self.MicroScreenShake = 0f;
+					self.bulletTimer = 0;
+				}
+				if (pulsing == 1) //rain transition
+				{
+                    self.bulletRainDensity = Mathf.Lerp(0.7f, 0.4f, pulseTimer / timeInThisMode);
+                    self.Intensity = Mathf.Lerp(maxIntensity, 0f, pulseTimer / timeInThisMode); //lerp fucking reversed...
+				}
+				if (pulsing == 2) //rain
+				{
+					self.Intensity = maxIntensity;
+                    self.flood += self.floodSpeed;
+					//self.ScreenShake = oldScreenShake;
+					//self.MicroScreenShake = oldMicroScreenShake;
+					self.ScreenShake = 1;
+					self.MicroScreenShake = 1;
+                }
+                if (pulsing == 3) //no rain transition
+				{
+                    self.bulletRainDensity = Mathf.Lerp(0.3f, 0.7f, pulseTimer / timeInThisMode);
+                    self.Intensity = Mathf.Lerp(0f, maxIntensity, pulseTimer / timeInThisMode); //lerp fucking reversed...
+                }
+            }
+		}
+    }
 }

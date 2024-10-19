@@ -19,6 +19,8 @@ public class LessDeadlyRainOptions : OptionInterface
 
 	public readonly Configurable<bool> pulsingRain;
 
+	public readonly Configurable<bool> noDeathRain;
+
 	public OpUpdown OpUpdownGen()
 	{
 		OpUpdown gen = new OpUpdown(buildupMultiplier, new Vector2(145f, 427f), 100f, 1);
@@ -34,7 +36,9 @@ public class LessDeadlyRainOptions : OptionInterface
 		arenaMode = config.Bind("fcldr_arenaMode", defaultValue: false);
 		buildupMultiplier = config.Bind("fcldr_buildupMultiplier", 1f);
 		screenShakeIntensity = config.Bind("fcldr_screenShakeIntensity", 25);
+
 		pulsingRain = config.Bind("fcldr_pulsingRain", defaultValue: false);
+		noDeathRain = config.Bind("fcldr_noDeathRain", defaultValue: false);
 
 	}
 
@@ -44,7 +48,7 @@ public class LessDeadlyRainOptions : OptionInterface
 		Tabs = new OpTab[1] { opTab };
 		OpContainer opContainer = new OpContainer(new Vector2(0f, 0f));
 		opTab.AddItems(opContainer);
-		UIelement[] elements = new UIelement[13]
+		UIelement[] elements = new UIelement[15]
 		{
 			new OpLabel(25f, 550f, "Options", bigText: true),
 			new OpCheckBox(lessDeadlyRain, 25f, 520f)
@@ -74,10 +78,16 @@ public class LessDeadlyRainOptions : OptionInterface
 				max = 100,
 				description = "Change the intensity of screenshake during end-of-cycle rain. 0% is no screenshake, 100% is full screenshake."
 			},
-			new OpLabel(55f, 360f, "Pulsing Rain"),
-			new OpCheckBox(pulsingRain, 25f, 363f)
+			new OpLabel(55f, 323f, "Pulsing Rain"),
+			new OpCheckBox(pulsingRain, 25f, 320f)
 			{
 				description = "Makes the rain pulsates like precycle rain"
+			},
+			new OpLabel(55f,293f,"Disable \"Death Rain\""),
+			new OpCheckBox(noDeathRain, 25f, 290f)
+			{
+				description = "Disables the \"DeathRain\" as the game calls it. Attempt to make the rain harmless like precycle",
+				greyedOut = !pulsingRain.Value
 			},
 		};
 		opTab.AddItems(elements);
